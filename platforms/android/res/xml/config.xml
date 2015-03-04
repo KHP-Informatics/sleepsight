@@ -1,0 +1,14 @@
+<?xml version='1.0' encoding='utf-8'?>
+<widget id="brc.iop.kcl.ac.uk.wake-sample" version="0.0.1" versionCode="1" xmlns="http://www.w3.org/ns/widgets" xmlns:gap="http://phonegap.com/ns/1.0">
+    <preference name="loglevel" value="DEBUG" />
+    <name>Wake Sample</name>
+    <icon src="icon.png" />
+    <description>
+A fantastic AGM Hack App
+    </description>
+    <author email="m-begale@northwestern.edu" href="http://cbits.northwestern.edu">
+		AGM Hack App
+	  </author>
+    <access origin="http://localhost:12345" />
+    <access origin="*" />
+</widget>

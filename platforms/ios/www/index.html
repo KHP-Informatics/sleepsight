@@ -1,0 +1,249 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>AGM HACK App</title>
+
+    <!--an off-the-shelf styling library, for more info, check out: www.getbootstrap.com -->
+    <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
+
+    <!--a JS DOM manipulation helper library, for more info, check out: www.jquery.com-->
+    <script src="app/lib/jquery-2.1.0.min.js"></script>
+
+    <!--a JS array manipulation helper library, for more info, check out: www.lodash.com-->
+    <script src="app/lib/lodash.min.js"></script>
+
+    <!--a PurpleRobot array manipulation helper library, for more info, check out the local docs in the folder-->
+    <script src="app/lib/PurpleRobotClient/purple-robot.min.js"></script>
+
+    <!--an off-the-shelf styling library, for more info, check out: www.getbootstrap.com -->
+    <script src="bootstrap/js/bootstrap.min.js"></script>
+
+    <style>
+        /* override styles */
+        input {width:100%;}
+        .btn {width:100%;}
+    </style>
+
+    <script>
+
+
+// UNCOMMENT THIS FOR PRODUCTION APPS--CONFIGURES THE IN DEVICE NATIVE LAUNCH LISTENER
+
+// $( document ).ready(function() {
+//     onLoad();
+// });
+
+// function onLoad() {
+//     document.addEventListener("deviceready", onDeviceReady, false);
+// }
+
+
+// function onDeviceReady() {
+//     document.addEventListener("resume", onResume, false);
+//     startApp();
+// }
+
+// // Handle the resume event
+// //
+// function onResume() {
+//     startApp();
+// }
+
+
+//JQuery listener that waits for the browser to have completed it's initial load
+$( document ).ready(function() {
+
+    //the "main()" of this app
+    startApp();
+});
+
+function startApp () {
+
+    $(".jumbotron").html("<h3>Wakeup Sample v0.0.1</h3>");
+            $("form#main-form").submit(function(eventObj)
+                {
+                eventObj.preventDefault();
+
+                //alert($("input#wakeup_time").val());
+                var wake = moment($("input#wakeup_time").val(), "HH:mm");
+                var remind = moment($("input#sample_time").val(), "HH:mm");
+                //var remind = moment($("input#sample_time").val(), "HH:mm");
+
+                scheduleAlarms(wake.hours(), wake.minutes(), remind.hours(), remind.minutes());
+                //response page to survey completion
+                var response_to_form_save = "<h2>Thanks!</h2>"
+                $(".container").html(response_to_form_save);
+
+                return false;
+                });
+
+/*    $("#main-form").on("submit", function(ev){
+
+        //stop the automatic browser submit of the form
+        ev.preventDefault();
+
+        //build an object to post to Purple Robot
+        var data_to_save = {};
+        data_to_save.dad_role = $("#dad_role").val();
+        data_to_save.created_at = new Date();
+
+        //send the data to Purple Robot
+        var pr = new PurpleRobot();
+        pr.emitReading("survey_data",data_to_save);
+
+        //response page to survey completion
+        var response_to_form_save = "<h2>Thanks!</h2>"
+        $(".container").html(response_to_form_save);
+    }); */
+
+    var sound_options = {default: "Default"}; //to be loaded from PR?
+
+    $.each(sound_options, function(index, value){
+      $("#alert-sound").append($('<option></option>').attr("value", index).text(value));
+    });
+}; 
+</script>
+
+
+            <script type="text/javascript" src="bootstrap/js/moment.js"></script>
+            <!-- <script type="text/javascript" src="../js/jquery-1.8.3.min.js"></script> -->
+		<script type="text/javascript">
+			function scheduleAlarms(wake_hour, wake_minute, remind_hour, remind_minute)
+			{
+					
+//				alert("Schedule " + wake_hour  + " - " +  wake_minute + " -- " + remind_hour + " - " + remind_minute);
+
+				var date_format = "YYYYMMDDTHHmmss"; // See date.js...
+
+				var alarm = moment();
+				alarm.hour(wake_hour);
+				alarm.minute(wake_minute);
+				alarm.seconds(0);
+
+				var end_date = moment();
+				end_date.hour(wake_hour);
+				end_date.minute(wake_minute);
+				end_date.seconds(0);
+				end_date.add('m', 5);
+				
+				var wake_trigger = {};
+
+				wake_trigger.type = "datetime";
+				wake_trigger.name = "Wakeup Alarm";
+				wake_trigger.identifier = "wakeup_alarm";
+				wake_trigger.action = "PurpleRobot.showNativeDialog('HEY!', 'WAKE UP!', 'OK', null, 'PurpleRobot.stopPlayback(); PurpleRobot.stopVibrate();', null); PurpleRobot.vibrate('SOS', true); PurpleRobot.playDefaultTone(true);"; 
+				wake_trigger.datetime_start = alarm.format(date_format);
+				wake_trigger.datetime_end = end_date.format(date_format);
+				wake_trigger.datetime_repeat =  "FREQ=DAILY;INTERVAL=1"
+
+				var script = "PurpleRobot.updateTrigger(\"" + wake_trigger.identifier + "\", " + JSON.stringify(wake_trigger) + ");";
+				
+				alarm = moment();
+				alarm.hour(remind_hour);
+				alarm.minute(remind_minute);
+				alarm.seconds(0);
+
+				var end_date = moment();
+				end_date.hour(remind_hour);
+				end_date.minute(remind_minute);
+				end_date.seconds(0);
+				end_date.add('m', 5);
+
+				var data_trigger = {};
+
+				data_trigger.type = "datetime";
+				data_trigger.name = "Data Collection Reminder";
+				data_trigger.identifier = "date_reminder";
+				data_trigger.action = "PurpleRobot.showNativeDialog('Reminder', 'Did you take a sample?', 'Yes',  'No', 'PurpleRobot.stopPlayback(); PurpleRobot.stopVibrate();', 'PurpleRobot.stopPlayback(); PurpleRobot.stopVibrate();'); PurpleRobot.vibrate('SOS', true); PurpleRobot.playDefaultTone(true);"; 
+				data_trigger.datetime_start = alarm.format(date_format);
+				data_trigger.datetime_end = end_date.format(date_format);
+				
+				script += "PurpleRobot.updateTrigger(\"" + data_trigger.identifier + "\", " + JSON.stringify(data_trigger) + ");";
+
+				var json = {};
+				json.command = "execute_script";
+				json.script = script;
+				
+				console.log('JSON: ' + JSON.stringify(json, 2));
+				
+				var post_data = {};
+				post_data.json = JSON.stringify(json);
+
+				$.ajax("http://127.0.0.1:12345/json/submit", {
+//				$.ajax("/json/submit", {
+					type: "POST",
+					contentType: "application/x-www-form-urlencoded; charset=UTF-8", 
+					data: post_data,
+					success: function(data)
+					{
+						console.log("Response: " + JSON.stringify(data));
+					},
+					error: function(jqXHR, textStatus, errorThrown) 
+					{ 
+						console.log("Error creating trigger: " + errorThrown);
+						console.log("error " + textStatus + " --- " + errorThrown); 
+					}
+				}); 
+			};
+
+                        </script>
+
+
+
+</head>
+
+<body>
+<ul class="nav nav-tabs" role="tablist">
+  <li class="active"><a href="#alarms" role="tab" data-toggle="tab">Alarms</a></li>
+  <li><a href="#options" role="tab" data-toggle="tab">Options</a></li>
+  <li><a href="#instructions" role="tab" data-toggle="tab">Instructions</a></li>
+</ul>
+<div class="container tab-content">
+  <div class="tab-pane active" id="alarms">
+        <form role="form" id="main-form">
+            <div class="gps-group">
+                <div class="form-group">
+                    <label>Set Wakup Alarm</label><br/>
+                    <input type="time" name="wakeup_time" id="wakeup_time">
+                </div>
+                <div class="form-group">
+                    <label>Set Sample Collect Alarm</label><br/>
+                    <input type="time" name="sample_time" id="sample_time">
+                </div>
+                <button type="submit" class="btn btn-primary">Sample Collected!</button>
+            </div>
+        </form>
+      </div>
+      <div class="tab-pane" id="options">
+        <form role="form" id="option-form">
+            <div class="gps-group">
+                <div class="form-group">
+                    <label>Select alarm sound</label>
+                    <select id="alert-sound" name="alert-sound">
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Select alarm vibration</label>
+                    <select id="alarm-vibe" name="alarm-vibe">
+                      <option value="buzz">Buzz</option>
+                      <option value="blip">Blip</option>
+                      <option value="sos">S.O.S.</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </div>
+        </form>
+      </div>
+      <div class="tab-pane" id="instructions">
+        <p></p>
+        <ol>
+        <li><p>Set wakeup time (we may later replace this with an automated wake monitoring signal e.g. from the Sleep Classifier)</p><li>
+        <li><p>Set sample time</p><li>
+        <li><p>After sample collected log by pressing the "Collected" button</p><li>
+        </ol>
+      </div>
+</div>
+
+</body>
+</html>
